@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grip — Typography Direction Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f10;
+    --panel: #161618;
+    --card: #1d1d20;
+    --line: #2a2a2e;
+    --lime: #c6ff00;
+    --white: #f4f4f5;
+    --dim: #a1a1aa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    padding: 32px 20px 60px;
+  }
+  .page-title { text-align: center; margin-bottom: 8px; font-size: 22px; font-weight: 700; }
+  .page-sub { text-align: center; color: var(--dim); font-size: 14px; margin-bottom: 40px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .card-head { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .card-head h2 { font-size: 16px; }
+  .card-head p { color: var(--dim); font-size: 12.5px; margin-top: 4px; line-height: 1.5; }
+  .card-body { padding: 24px 20px; }
+
+  .brand { letter-spacing: 2px; font-size: 34px; color: var(--white); }
+  .brand b { color: var(--lime); }
+  .tag { display: inline-block; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); margin-bottom: 16px; }
+
+  .screen { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  .screen-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .screen-top .workout { font-size: 20px; }
+  .timer { font-size: 34px; font-variant-numeric: tabular-nums; color: var(--lime); font-weight: 700; }
+  .ex-row { background: var(--card); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .ex-row .ex-name { font-size: 15px; margin-bottom: 8px; }
+  .ex-row .ex-name small { display: block; color: var(--dim); font-weight: 400; font-size: 12px; margin-top: 2px; }
+  .sets { display: flex; gap: 8px; }
+  .set-chip { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; text-align: center; flex: 1; }
+  .set-chip .label { display: block; font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .set-chip .value { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .btn { display: block; width: 100%; text-align: center; background: var(--lime); color: #0f0f10; border-radius: 10px; padding: 14px; font-weight: 800; font-size: 15px; letter-spacing: 0.3px; margin-top: 6px; }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--white); }
+
+  /* OPTION A: Anton display + Inter body */
+  .opt-a .brand, .opt-a .workout, .opt-a .ex-name, .opt-a .timer { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: 0.5px; }
+  .opt-a .tag { font-family: 'Inter', sans-serif; }
+  .opt-a .ex-name { font-size: 17px; }
+  .opt-a .ex-name small, .opt-a .set-chip .label { font-family: 'Inter', sans-serif; }
+  .opt-a .set-chip .value { font-family: 'Inter', sans-serif; font-weight: 800; }
+  .opt-a .timer { font-size: 40px; }
+
+  /* OPTION B: Space Grotesk headings + Inter body */
+  .opt-b .brand, .opt-b .workout, .opt-b .ex-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+  .opt-b .timer { font-family: 'Inter', sans-serif; font-weight: 700; }
+  .opt-b .set-chip .value { font-family: 'Inter', sans-serif; font-weight: 700; }
+  .opt-b .brand { font-size: 32px; }
+
+  /* OPTION C: Archivo Black everywhere */
+  .opt-c .brand, .opt-c .workout, .opt-c .ex-name, .opt-c .timer, .opt-c .set-chip .value, .opt-c .btn { font-family: 'Archivo Black', sans-serif; font-weight: 400; }
+  .opt-c .tag { font-family: 'Inter', sans-serif; }
+  .opt-c .ex-name small, .opt-c .set-chip .label { font-family: 'Inter', sans-serif; }
+  .opt-c .timer { font-size: 38px; }
+  .opt-c .ex-name { font-size: 16px; }
+  .opt-c .btn { font-size: 14px; letter-spacing: 0.5px; }
+
+  .footnote { max-width: 1200px; margin: 40px auto 0; color: var(--dim); font-size: 13px; line-height: 1.7; text-align: center; }
+  .footnote code { background: var(--card); padding: 2px 6px; border-radius: 4px; color: var(--white); }
+</style>
+</head>
+<body>
+
+  <div class="page-title">Grip — Typography Direction Preview</div>
+  <div class="page-sub">Same app screen, three type systems. Numbers use tabular figures everywhere (vital for set logging).</div>
+
+  <div class="cards">
+
+    <!-- OPTION A -->
+    <div class="card opt-a">
+      <div class="card-head">
+        <h2>A — Athletic Bold + Clean Body</h2>
+        <p>Condensed poster-style display for names and headings (Anton), neutral sans for body and numbers (Inter). Confident and energetic, still quiet and readable where it matters.</p>
+      </div>
+      <div class="card-body">
+        <div class="tag">Option A · Anton + Inter</div>
+        <div class="brand">GR<b>IP</b></div>
+        <div class="screen" style="margin-top:16px">
+          <div class="screen-top">
+            <div class="workout">PUSH DAY</div>
+            <div class="timer">00:45</div>
+          </div>
+          <div class="ex-row">
+            <div class="ex-name">BARBELL BENCH PRESS<small>Chest · Barbell · 4 sets</small></div>
+            <div class="sets">
+              <div class="set-chip"><span class="label">Set 1</span><span class="value">60 kg</span></div>
+              <div class="set-chip"><span class="label">Set 2</span><span class="value">12 reps</span></div>
+              <div class="set-chip"><span class="label">Vol</span><span class="value">720</span></div>
+            </div>
+          </div>
+          <div class="ex-row">
+            <div class="ex-name">INCLINE DUMBBELL PRESS<small>Chest · Dumbbell</small></div>
+            <div class="sets">
+              <div class="set-chip"><span class="label">Set 1</span><span class="value">22.5 kg</span></div>
+              <div class="set-chip"><span class="label">Set 2</span><span class="value">10 reps</span></div>
+              <div class="set-chip"><span class="label">Vol</span><span class="value">225</span></div>
+            </div>
+          </div>
+          <div class="btn">Finish Set</div>
+          <div class="btn ghost" style="margin-top:8px">End Workout</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION B -->
+    <div class="card opt-b">
+      <div class="card-head">
+        <h2>B — Modern Minimal</h2>
+        <p>One clean geometric family for headings (Space Grotesk) with a neutral body (Inter). Understated, Apple-like, calm. Least 'gym-poster', most elegant.</p>
+      </div>
+      <div class="card-body">
+        <div class="tag">Option B · Space Grotesk + Inter</div>
+        <div class="brand">GR<b>IP</b></div>
+        <div class="screen" style="margin-top:16px">
+          <div class="screen-top">
+            <div class="workout">Push Day</div>
+            <div class="timer">00:45</div>
+          </div>
+          <div class="ex-row">
+            <div class="ex-name">Barbell Bench Press<small>Chest · Barbell · 4 sets</small></div>
+            <div class="sets">
+              <div class="set-chip"><span class="label">Set 1</span><span class="value">60 kg</span></div>
+              <div class="set-chip"><span class="label">Set 2</span><span class="value">12 reps</span></div>
+              <div class="set-chip"><span class="label">Vol</span><span class="value">720</span></div>
+            </div>
+          </div>
+          <div class="ex-row">
+            <div class="ex-name">Incline Dumbbell Press<small>Chest · Dumbbell</small></div>
+            <div class="sets">
+              <div class="set-chip"><span class="label">Set 1</span><span class="value">22.5 kg</span></div>
+              <div class="set-chip"><span class="label">Set 2</span><span class="value">10 reps</span></div>
+              <div class="set-chip"><span class="label">Vol</span><span class="value">225</span></div>
+            </div>
+          </div>
+          <div class="btn">Finish Set</div>
+          <div class="btn ghost" style="margin-top:8px">End Workout</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTION C -->
+    <div class="card opt-c">
+      <div class="card-head">
+        <h2>C — Loud &amp; Heavy</h2>
+        <p>Extra-bold everywhere (Archivo Black) — names, numbers, buttons all heavy. Maximum gym-poster energy. Highest visual punch, but numbers are heavier and less quiet.</p>
+      </div>
+      <div class="card-body">
+        <div class="tag">Option C · Archivo Black</div>
+        <div class="brand">GR<b>IP</b></div>
+        <div class="screen" style="margin-top:16px">
+          <div class="screen-top">
+            <div class="workout">PUSH DAY</div>
+            <div class="timer">00:45</div>
+          </div>
+          <div class="ex-row">
+            <div class="ex-name">BARBELL BENCH PRESS<small>Chest · Barbell · 4 sets</small></div>
+            <div class="sets">
+              <div class="set-chip"><span class="label">Set 1</span><span class="value">60 kg</span></div>
+              <div class="set-chip"><span class="label">Set 2</span><span class="value">12 reps</span></div>
+              <div class="set-chip"><span class="label">Vol</span><span class="value">720</span></div>
+            </div>
+          </div>
+          <div class="ex-row">
+            <div class="ex-name">INCLINE DUMBBELL PRESS<small>Chest · Dumbbell</small></div>
+            <div class="sets">
+              <div class="set-chip"><span class="label">Set 1</span><span class="value">22.5 kg</span></div>
+              <div class="set-chip"><span class="label">Set 2</span><span class="value">10 reps</span></div>
+              <div class="set-chip"><span class="label">Vol</span><span class="value">225</span></div>
+            </div>
+          </div>
+          <div class="btn">Finish Set</div>
+          <div class="btn ghost" style="margin-top:8px">End Workout</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footnote">
+    All three use <code>font-variant-numeric: tabular-nums</code> so numbers never jitter while you log sets.<br>
+    Option A is my recommendation for <strong>Grip</strong>: it delivers the "energy &amp; motivation" feeling through bold condensed display type, while keeping set data calm and precise in a quiet sans — exactly the combo you described.
+  </div>
+
+</body>
+</html>

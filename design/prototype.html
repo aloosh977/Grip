@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grip — Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f10;
+    --surface: #161618;
+    --surface-2: #1d1d20;
+    --border: #2a2a2e;
+    --accent: #c6ff00;
+    --accent-ink: #0f0f10;
+    --text: #f4f4f5;
+    --text-2: #a1a1aa;
+    --text-3: #6b6b72;
+    --danger: #ff5c5c;
+    --success: #4ade80;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+    --radius-sm: 10px; --radius-md: 14px; --radius-lg: 16px; --radius-xl: 24px;
+    --display: "Archivo Black", system-ui, sans-serif;
+    --body: "Inter", system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: #000;
+    font-family: var(--body);
+    color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+  .phone {
+    width: 390px; height: 844px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 80px rgba(198,255,0,0.06);
+  }
+  @media (max-width: 430px), (max-height: 900px) {
+    .phone {
+      width: 100vw; height: 100vh; height: 100dvh;
+      border: none; border-radius: 0;
+      box-shadow: none;
+    }
+  }
+  .screen { position: absolute; inset: 0; overflow-y: auto; padding-bottom: 90px; display: none; }
+  .screen.active { display: block; }
+  .statusbar { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .statusbar .time { font-weight: 600; font-size: 14px; }
+  .statusbar .icons { display: flex; gap: 6px; color: var(--text-2); font-size: 12px; }
+
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 4px 20px 14px; }
+  .topbar h1 { font-family: var(--display); font-size: 24px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .topbar .back { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--text); cursor: pointer; border-radius: 12px; }
+  .topbar .back:active { background: var(--surface); }
+  .topbar .spacer { flex: 1; }
+  .topbar .action { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--accent); cursor: pointer; padding: 10px; }
+
+  .brand-row { padding: 6px 20px 4px; display: flex; align-items: baseline; gap: 10px; }
+  .brand-row .spacer { flex: 1; }
+  .brand { font-family: var(--display); font-size: 34px; letter-spacing: 2px; }
+  .brand b { color: var(--accent); }
+  .brand-tag { color: var(--text-3); font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; }
+  .gear { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--text-2); cursor: pointer; border-radius: 12px; align-self: center; }
+  .gear:active { background: var(--surface); color: var(--accent); }
+
+  .content { padding: 0 20px; }
+
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 52px; border-radius: var(--radius-md); font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; border: none; }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn.danger-ghost { background: transparent; color: var(--danger); border: 1px solid var(--border); }
+
+  .btn-big { height: 60px; font-size: 19px; border-radius: var(--radius-lg); }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin: var(--sp-4) 0; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--sp-4); }
+  .stat-card .label { color: var(--text-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .stat-card .value { font-family: var(--display); font-size: 24px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .stat-card .value small { font-size: 12px; color: var(--text-3); font-family: var(--body); }
+
+  .section-title { display: flex; justify-content: space-between; align-items: baseline; margin: var(--sp-6) 0 var(--sp-3); }
+  .section-title h2 { font-family: var(--display); font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
+  .section-title a { color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  .row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--sp-4); margin-bottom: var(--sp-3); cursor: pointer; }
+  .row:active { background: var(--surface-2); }
+  .row .row-name { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .row .row-meta { color: var(--text-2); font-size: 12px; margin-top: 4px; }
+  .row-head { display: flex; justify-content: space-between; align-items: center; }
+  .row .chev { color: var(--text-3); font-size: 18px; }
+
+  .ex-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--sp-4); margin-bottom: var(--sp-3); }
+  .ex-row .ex-name { font-family: var(--display); font-size: 16px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .ex-row .ex-meta { color: var(--text-2); font-size: 12px; margin-top: 3px; }
+  .ex-row .muscle-chip { display: inline-block; background: var(--surface-2); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 600; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .sets { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 2px; }
+  .set-chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; text-align: center; min-width: 68px; cursor: pointer; }
+  .set-chip:active { border-color: var(--accent); }
+  .set-chip .label { display: block; font-size: 9.5px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+  .set-chip .value { font-family: var(--display); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .set-chip.done { border-color: var(--accent); }
+  .set-chip.done .value { color: var(--accent); }
+
+  .empty { text-align: center; color: var(--text-3); padding: 60px 20px; font-size: 13px; line-height: 1.6; }
+
+  /* NAV */
+  .nav { position: absolute; bottom: 0; left: 0; right: 0; height: 76px; background: rgba(15,15,16,0.92); backdrop-filter: blur(14px); border-top: 1px solid var(--border); display: flex; z-index: 30; padding-bottom: 12px; }
+  .nav .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--text-3); cursor: pointer; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .nav .tab .ic { font-size: 20px; }
+  .nav .tab.active { color: var(--accent); }
+  .nav .tab.start-tab { color: var(--accent); }
+  .nav .tab.start-tab .fab { background: var(--accent); color: var(--accent-ink); width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-top: -22px; box-shadow: 0 6px 20px rgba(198,255,0,0.35); }
+  .nav .tab.start-tab span { color: var(--accent); }
+
+  /* SEGMENT */
+  .segment { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin: var(--sp-4) 0; }
+  .segment .seg { flex: 1; text-align: center; padding: 12px 0; border-radius: 999px; font-family: var(--display); font-size: 13px; text-transform: uppercase; color: var(--text-2); cursor: pointer; }
+  .segment .seg.active { background: var(--accent); color: var(--accent-ink); }
+
+  /* SESSION */
+  .session-top { padding: 8px 20px 0; }
+  .session-top .session-workout { font-family: var(--display); font-size: 20px; text-transform: uppercase; }
+  .session-top .session-plan { color: var(--text-2); font-size: 12px; margin-top: 2px; }
+  .timer-wrap { text-align: center; padding: var(--sp-4) 0 var(--sp-2); }
+  .timer { font-family: var(--display); font-size: 44px; font-variant-numeric: tabular-nums; color: var(--accent); letter-spacing: 1px; }
+  .timer-sub { color: var(--text-2); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  .mode-session { display: block; }
+  .mode-session.hidden { display: none; }
+
+  /* FOCUS MODE */
+  .focus-wrap { padding: 0 20px; }
+  .focus-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--sp-6); text-align: center; }
+  .focus-ex-name { font-family: var(--display); font-size: 22px; text-transform: uppercase; line-height: 1.3; }
+  .focus-ex-meta { color: var(--text-2); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .focus-set-num { margin: var(--sp-5) 0 var(--sp-2); }
+  .focus-set-num .big { font-family: var(--display); font-size: 60px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .focus-set-num .suffix { color: var(--text-2); font-size: 16px; font-family: var(--display); }
+  .focus-started { color: var(--text-3); font-size: 12px; margin-bottom: var(--sp-6); text-transform: uppercase; letter-spacing: 1px; }
+  .focus-actions { display: flex; flex-direction: column; gap: 10px; }
+  .focus-row { display: flex; gap: 10px; align-items: center; justify-content: center; margin: var(--sp-4) 0; }
+  .focus-row .chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; min-width: 96px; }
+  .focus-row .chip .label { display: block; font-size: 10px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .focus-row .chip .value { font-family: var(--display); font-size: 22px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  /* REST OVERLAY */
+  .overlay { position: absolute; inset: 0; background: rgba(10,10,11,0.96); z-index: 40; display: none; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6); }
+  .overlay.active { display: flex; }
+  .overlay .rest-label { color: var(--text-2); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+  .overlay .rest-timer { font-family: var(--display); font-size: 90px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .overlay .rest-next { color: var(--text-2); font-size: 13px; max-width: 260px; text-align: center; line-height: 1.5; }
+
+  /* CALENDAR */
+  .cal-strip { display: flex; gap: 10px; margin: var(--sp-4) 0 var(--sp-3); }
+  .cal-badge { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; }
+  .cal-badge .cb-label { font-size: 10px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.8px; }
+  .cal-badge .cb-val { font-family: var(--display); font-size: 20px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .cal-badge .cb-val .goal { color: var(--text-3); font-size: 13px; font-family: var(--body); font-variant-numeric: tabular-nums; }
+  .cal-head { display: flex; justify-content: space-between; align-items: center; margin: var(--sp-4) 0 var(--sp-3); }
+  .cal-head .month { font-family: var(--display); font-size: 18px; text-transform: uppercase; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { text-align: center; color: var(--text-3); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding: 6px 0; }
+  .cal-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-sm); font-size: 13px; color: var(--text-2); cursor: pointer; position: relative; }
+  .cal-day .d { font-weight: 600; }
+  .cal-day .vol { font-size: 8.5px; color: var(--accent); font-family: var(--display); margin-top: 2px; }
+  .cal-day.have { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .cal-day.selected { background: var(--accent); color: var(--accent-ink); }
+  .cal-day.selected .vol { color: var(--accent-ink); }
+  .cal-day.muted { color: var(--text-3); }
+
+  /* SHEET */
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; z-index: 35; padding: var(--sp-4) var(--sp-5) calc(24px + env(safe-area-inset-bottom)); display: none; border-top: 1px solid var(--border); }
+  .sheet.active { display: block; }
+  .sheet .handle { width: 40px; height: 4px; background: var(--border); border-radius: 999px; margin: 0 auto var(--sp-4); }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-4); }
+  .sheet-head h3 { margin-bottom: 0; }
+  .sheet-cancel { color: var(--text-2); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 4px 10px 16px; cursor: pointer; }
+  .sheet-cancel:active { color: var(--accent); }
+  .sheet h3 { font-family: var(--display); font-size: 18px; text-transform: uppercase; margin-bottom: var(--sp-4); }
+  .field { margin-bottom: var(--sp-4); }
+  .field label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-2); margin-bottom: 6px; }
+  .field input, .field select, .field textarea { width: 100%; height: 50px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--body); font-size: 15px; padding: 0 14px; outline: none; }
+  .field textarea { height: 80px; padding-top: 12px; resize: none; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field select { appearance: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips .chip { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); border-radius: 999px; padding: 9px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .chips .chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .search { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); height: 50px; display: flex; align-items: center; padding: 0 14px; gap: 10px; margin-bottom: var(--sp-3); }
+  .search input { flex: 1; background: none; border: none; color: var(--text); font-size: 15px; outline: none; font-family: var(--body); }
+  .search .ic { color: var(--text-3); }
+
+  .filter-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: var(--sp-4); padding-bottom: 4px; }
+  .filter-row .chip { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+  .filter-row .chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .list-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--sp-4); margin-bottom: var(--sp-3); }
+  .list-row .thumb { width: 48px; height: 48px; border-radius: 10px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .list-row .info { flex: 1; min-width: 0; }
+  .list-row .info .t { font-family: var(--display); font-size: 14px; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list-row .info .m { color: var(--text-2); font-size: 12px; margin-top: 3px; }
+  .list-row .chev { color: var(--text-3); }
+
+  .toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--accent); color: var(--text); border-radius: 999px; padding: 12px 20px; font-size: 13px; z-index: 50; display: none; white-space: nowrap; }
+  .toast.show { display: block; }
+  .dim { color: var(--text-2); }
+
+  .settings-row { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-4); }
+  .settings-row .s-label { font-size: 14px; }
+  .settings-row .s-label small { display: block; color: var(--text-3); font-size: 12px; margin-top: 3px; }
+  .version { text-align: center; color: var(--text-3); font-size: 12px; margin-top: var(--sp-8); }
+
+  .setting-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 10px; }
+  .setting-item .si-label { font-size: 14px; }
+  .setting-item .si-label small { display: block; color: var(--text-3); font-size: 11px; margin-top: 2px; }
+  .setting-item .chip { pointer-events: auto; }
+  .tag-default { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; border: 1px dashed var(--border); border-radius: 999px; padding: 6px 10px; }
+  .stepper { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 8px; }
+  .stepper button { width: 38px; height: 38px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-size: 18px; cursor: pointer; }
+  .stepper button:active { border-color: var(--accent); color: var(--accent); }
+  .stepper .val { font-family: var(--display); font-size: 18px; min-width: 22px; text-align: center; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <!-- ============ HOME ============ -->
+  <div class="screen" id="s-home">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="brand-row"><div class="brand">GR<b>IP</b></div><div class="brand-tag">Get a grip</div><div class="spacer"></div><div class="gear" onclick="go('s-settings')">⚙</div></div>
+    <div class="content">
+      <div style="margin:6px 0 14px;"><div style="font-size:13px;color:var(--text-2);">Welcome back</div><div style="font-family:var(--display);font-size:22px;text-transform:uppercase;margin-top:2px;">Monday, Push Day</div></div>
+      <button class="btn primary btn-big" id="home-start-btn" onclick="homeStart()"><span style="font-size:20px">▶</span> Start workout</button>
+      <div class="stat-grid" id="home-stats"></div>
+      <div class="section-title"><h2>Recent workouts</h2><a onclick="go('s-calendar')">Calendar</a></div>
+      <div class="row" onclick="go('s-cal-day')"><div class="row-head"><div><div class="row-name">Push Day</div><div class="row-meta">Mon · 45 min · 6,400 kg</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Leg Day</div><div class="row-meta">Sat · 52 min · 5,120 kg</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Pull Day</div><div class="row-meta">Thu · 48 min · 4,880 kg</div></div><div class="chev">›</div></div></div>
+    </div>
+  </div>
+
+  <!-- ============ PLANS ============ -->
+  <div class="screen" id="s-plans">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><h1>Plans</h1><div class="spacer"></div><div class="action" onclick="openSheet('sheet-plan')">+ New</div></div>
+    <div class="content">
+      <div class="row" onclick="go('s-plan-detail')"><div class="row-head"><div><div class="row-name">Bro Split</div><div class="row-meta">6 workouts · 28 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Plan A</div><div class="row-meta">4 workouts · 16 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Full Body</div><div class="row-meta">3 workouts · 15 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="empty">Plans group your workouts.<br>Tap + to create one.</div>
+    </div>
+  </div>
+
+  <!-- ============ PLAN DETAIL ============ -->
+  <div class="screen" id="s-plan-detail">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><div class="back" onclick="go('s-plans')">‹</div><h1>Bro Split</h1><div class="spacer"></div><div class="action" onclick="openSheet('sheet-workout')">+ Workout</div></div>
+    <div class="content">
+      <div class="row" onclick="go('s-workout-detail')"><div class="row-head"><div><div class="row-name">Push</div><div class="row-meta">6 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Pull</div><div class="row-meta">5 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Legs</div><div class="row-meta">5 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Push</div><div class="row-meta">6 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Pull</div><div class="row-meta">5 exercises</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Legs</div><div class="row-meta">5 exercises</div></div><div class="chev">›</div></div></div>
+    </div>
+  </div>
+
+  <!-- ============ WORKOUT DETAIL ============ -->
+  <div class="screen" id="s-workout-detail">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><div class="back" onclick="go('s-plan-detail')">‹</div><h1>Push</h1><div class="spacer"></div><div class="action" onclick="openSheet('sheet-add-ex')">+ Ex</div></div>
+    <div class="content">
+      <button class="btn primary" style="margin: 4px 0 16px;" onclick="startSession();go('s-session')"><span>▶</span> Start this workout</button>
+      <div class="ex-row"><div class="ex-name">Barbell Bench Press</div><div class="ex-meta">Barbell · 4 sets</div><div class="muscle-chip">Chest</div></div>
+      <div class="ex-row"><div class="ex-name">Incline Dumbbell Press</div><div class="ex-meta">Dumbbell · 3 sets</div><div class="muscle-chip">Chest</div></div>
+      <div class="ex-row"><div class="ex-name">Cable Fly</div><div class="ex-meta">Cable · 3 sets</div><div class="muscle-chip">Chest</div></div>
+      <div class="ex-row"><div class="ex-name">Lateral Raise</div><div class="ex-meta">Dumbbell · 4 sets</div><div class="muscle-chip">Shoulders</div></div>
+      <div class="ex-row"><div class="ex-name">Overhead Press</div><div class="ex-meta">Barbell · 3 sets</div><div class="muscle-chip">Shoulders</div></div>
+      <div class="ex-row"><div class="ex-name">Triceps Pushdown</div><div class="ex-meta">Cable · 3 sets</div><div class="muscle-chip">Triceps</div></div>
+    </div>
+  </div>
+
+  <!-- ============ START (pick plan) ============ -->
+  <div class="screen" id="s-start">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><div class="back" onclick="go('s-home')">‹</div><h1>Start</h1></div>
+    <div class="content">
+      <div class="section-title" style="margin-top:6px;"><h2>Choose a plan</h2></div>
+      <div class="row" onclick="go('s-start-workout')"><div class="row-head"><div><div class="row-name">Bro Split</div><div class="row-meta">6 workouts</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Plan A</div><div class="row-meta">4 workouts</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Full Body</div><div class="row-meta">3 workouts</div></div><div class="chev">›</div></div></div>
+    </div>
+  </div>
+
+  <!-- ============ START (pick workout) ============ -->
+  <div class="screen" id="s-start-workout">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><div class="back" onclick="go('s-start')">‹</div><h1>Bro Split</h1></div>
+    <div class="content">
+      <div class="section-title" style="margin-top:6px;"><h2>Choose workout</h2></div>
+      <div class="row" onclick="startSession();go('s-session')"><div class="row-head"><div><div class="row-name">Push</div><div class="row-meta">6 exercises · ~45 min</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Pull</div><div class="row-meta">5 exercises · ~45 min</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Legs</div><div class="row-meta">5 exercises · ~50 min</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Push</div><div class="row-meta">6 exercises · ~45 min</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Pull</div><div class="row-meta">5 exercises · ~45 min</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name">Legs</div><div class="row-meta">5 exercises · ~50 min</div></div><div class="chev">›</div></div></div>
+    </div>
+  </div>
+
+  <!-- ============ LIVE SESSION ============ -->
+  <div class="screen" id="s-session">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="session-top"><div class="session-workout">Push</div><div class="session-plan">Bro Split · Started 8:10</div></div>
+    <div class="timer-wrap"><div class="timer" id="session-timer">00:00:00</div><div class="timer-sub">total time</div></div>
+
+    <div class="segment" style="margin: 4px 20px 12px;">
+      <div class="seg" id="seg-list" onclick="setMode('list')">List</div>
+      <div class="seg active" id="seg-focus" onclick="setMode('focus')">Focus</div>
+    </div>
+
+    <!-- LIST MODE -->
+    <div class="mode-session" id="mode-list">
+      <div class="content">
+        <div class="ex-row"><div class="ex-name">Barbell Bench Press</div><div class="ex-meta">Chest · Barbell</div>
+          <div class="sets">
+            <div class="set-chip done"><span class="label">Set 1</span><span class="value">60kg</span></div>
+            <div class="set-chip done"><span class="label">Set 2</span><span class="value">60kg</span></div>
+            <div class="set-chip"><span class="label">Set 3</span><span class="value">—</span></div>
+            <div class="set-chip"><span class="label">Set 4</span><span class="value">—</span></div>
+          </div>
+          <div class="sets" style="margin-top:8px;"><div class="set-chip"><span class="label">Vol</span><span class="value" style="color:var(--accent)">1,320</span></div></div>
+        </div>
+        <div class="ex-row"><div class="ex-name">Incline Dumbbell Press</div><div class="ex-meta">Chest · Dumbbell</div>
+          <div class="sets">
+            <div class="set-chip done"><span class="label">Set 1</span><span class="value">22.5kg</span></div>
+            <div class="set-chip"><span class="label">Set 2</span><span class="value">—</span></div>
+            <div class="set-chip"><span class="label">Set 3</span><span class="value">—</span></div>
+          </div>
+        </div>
+        <div class="ex-row"><div class="ex-name">Cable Fly</div><div class="ex-meta">Chest · Cable</div>
+          <div class="sets"><div class="set-chip"><span class="label">Set 1</span><span class="value">—</span></div><div class="set-chip"><span class="label">Set 2</span><span class="value">—</span></div><div class="set-chip"><span class="label">Set 3</span><span class="value">—</span></div></div>
+        </div>
+        <button class="btn ghost" onclick="openSheet('sheet-add-adhoc')"><span style="font-size:18px">＋</span> Add exercise</button>
+        <div style="height:12px"></div>
+        <button class="btn danger-ghost" onclick="openEndSheet()">End workout</button>
+        <div style="height:12px"></div>
+      </div>
+    </div>
+
+    <!-- FOCUS MODE -->
+    <div class="mode-session" id="mode-focus">
+      <div class="focus-wrap">
+        <div class="focus-card">
+          <div class="focus-ex-name">Barbell Bench Press</div>
+          <div class="focus-ex-meta">Chest · Barbell · Set 3 of 4</div>
+          <div class="focus-set-num"><span class="big">—</span></div>
+          <div class="focus-started">Started 8:14 · elapsed 00:32</div>
+          <div class="focus-row">
+            <div class="chip"><span class="label">Reps</span><span class="value">—</span></div>
+            <div class="chip"><span class="label">Weight</span><span class="value">—</span></div>
+          </div>
+          <div class="focus-actions">
+            <button class="btn primary" onclick="openSheet('sheet-set')"><span style="font-size:18px">✓</span> Finish set</button>
+            <button class="btn ghost" onclick="showToast('Set deleted')">Delete set</button>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+        <button class="btn danger-ghost" onclick="openEndSheet()">End workout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CALENDAR ============ -->
+  <div class="screen" id="s-calendar">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><h1>Calendar</h1></div>
+    <div class="content">
+      <div class="cal-strip">
+        <div class="cal-badge"><div class="cb-label">Streak</div><div class="cb-val">5 <small class="goal">wks</small></div></div>
+        <div class="cal-badge"><div class="cb-label">This week</div><div class="cb-val">3 <small class="goal">/ <span id="cal-week-total">4</span></small></div></div>
+      </div>
+      <div class="cal-head"><div class="month">February 2026</div><div style="color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;">›</div></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="section-title" style="margin-top:var(--sp-6);"><h2>Mon, Feb 17</h2></div>
+      <div class="row" onclick="go('s-cal-day')"><div class="row-head"><div><div class="row-name">Push Day</div><div class="row-meta">Bro Split · 45 min · 6,400 kg</div></div><div class="chev">›</div></div></div>
+    </div>
+  </div>
+
+  <!-- ============ CAL DAY DETAIL ============ -->
+  <div class="screen" id="s-cal-day">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><div class="back" onclick="go('s-calendar')">‹</div><h1>Push Day</h1></div>
+    <div class="content">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Duration</div><div class="value">45 <small>min</small></div></div>
+        <div class="stat-card"><div class="label">Volume</div><div class="value">6,400 <small>kg</small></div></div>
+        <div class="stat-card"><div class="label">Sets</div><div class="value">24</div></div>
+        <div class="stat-card"><div class="label">Plan</div><div class="value" style="font-size:16px;margin-top:8px;">Bro Split</div></div>
+      </div>
+      <div class="section-title"><h2>Exercises</h2></div>
+      <div class="ex-row"><div class="ex-name">Barbell Bench Press</div><div class="ex-meta">4 sets</div>
+        <div class="sets"><div class="set-chip"><span class="label">60kg×12</span></div><div class="set-chip"><span class="label">60kg×10</span></div><div class="set-chip"><span class="label">65kg×8</span></div><div class="set-chip"><span class="label">65kg×6</span></div></div>
+        <div class="ex-meta" style="margin-top:8px;color:var(--accent);font-family:var(--display);font-variant-numeric:tabular-nums;">vol 2,010</div>
+      </div>
+      <div class="ex-row"><div class="ex-name">Incline Dumbbell Press</div><div class="ex-meta">3 sets</div>
+        <div class="sets"><div class="set-chip"><span class="label">22.5kg×12</span></div><div class="set-chip"><span class="label">22.5kg×10</span></div><div class="set-chip"><span class="label">25kg×8</span></div></div>
+        <div class="ex-meta" style="margin-top:8px;color:var(--accent);font-family:var(--display);font-variant-numeric:tabular-nums;">vol 1,175</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXERCISES ============ -->
+  <div class="screen" id="s-exercises">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><h1>Exercises</h1><div class="spacer"></div><div class="action" onclick="openSheet('sheet-exercise')">+ New</div></div>
+    <div class="content">
+      <div class="search"><span class="ic">⌕</span><input placeholder="Search exercises..."></div>
+      <div class="filter-row">
+        <div class="chip active">All</div><div class="chip">Barbell</div><div class="chip">Dumbbell</div><div class="chip">Cable</div><div class="chip">Machine</div><div class="chip">Bodyweight</div>
+      </div>
+      <div class="list-row" onclick="openSheet('sheet-exercise-edit')"><div class="thumb">🏋</div><div class="info"><div class="t">Barbell Bench Press</div><div class="m">Chest · Barbell</div></div><div class="chev">›</div></div>
+      <div class="list-row"><div class="thumb">💪</div><div class="info"><div class="t">Incline Dumbbell Press</div><div class="m">Chest · Dumbbell</div></div><div class="chev">›</div></div>
+      <div class="list-row"><div class="thumb">🦾</div><div class="info"><div class="t">Lateral Raise</div><div class="m">Shoulders · Dumbbell</div></div><div class="chev">›</div></div>
+      <div class="list-row"><div class="thumb">🦿</div><div class="info"><div class="t">Squat</div><div class="m">Legs · Barbell</div></div><div class="chev">›</div></div>
+      <div class="list-row"><div class="thumb">🍗</div><div class="info"><div class="t">Romanian Deadlift</div><div class="m">Hamstrings · Barbell</div></div><div class="chev">›</div></div>
+      <div class="list-row"><div class="thumb">🔥</div><div class="info"><div class="t">Triceps Pushdown</div><div class="m">Triceps · Cable</div></div><div class="chev">›</div></div>
+      <div class="list-row"><div class="thumb">🧗</div><div class="info"><div class="t">Pull Up</div><div class="m">Back · Bodyweight</div></div><div class="chev">›</div></div>
+    </div>
+  </div>
+
+  <!-- ============ SETTINGS (via plans top? keep simple: settings sheet) ============ -->
+  <div class="screen" id="s-settings">
+    <div class="statusbar"><span class="time">9:41</span><span class="icons">◉ ▮▮</span></div>
+    <div class="topbar"><div class="back" onclick="go('s-home')">‹</div><h1>Settings</h1></div>
+    <div class="content">
+      <div class="section-title" style="margin-top:6px;"><h2>Home screen</h2></div>
+      <div class="setting-item"><div class="si-label">Trained this week<small>Default · always shown</small></div><div class="tag-default">Default</div></div>
+      <div class="setting-item"><div class="si-label">Total volume this week<small>Default · always shown</small></div><div class="tag-default">Default</div></div>
+      <div class="setting-item" onclick="toggleStat('totalWorkouts',this)"><div class="si-label">Total workouts<small>Optional</small></div><div class="chip" id="tg-totalWorkouts">Off</div></div>
+      <div class="setting-item" onclick="toggleStat('bestWeek',this)"><div class="si-label">Best week<small>Optional</small></div><div class="chip" id="tg-bestWeek">Off</div></div>
+      <div class="setting-item" onclick="toggleStat('bestDay',this)"><div class="si-label">Best day<small>Optional</small></div><div class="chip" id="tg-bestDay">Off</div></div>
+      <div class="setting-item" onclick="toggleStat('volumeDay',this)"><div class="si-label">Total volume this day<small>Optional</small></div><div class="chip" id="tg-volumeDay">Off</div></div>
+      <div class="section-title"><h2>Weekly goal</h2></div>
+      <div class="setting-item"><div class="si-label">Workouts per week<small>Shown on Home &amp; Calendar</small></div>
+        <div class="stepper"><button onclick="changeGoal(-1)">−</button><div class="val" id="goal-val">4</div><button onclick="changeGoal(1)">＋</button></div>
+      </div>
+      <div class="section-title"><h2>Week starts on</h2></div>
+      <div class="chips" id="weekstart-chips">
+        <div class="chip" data-i="6" onclick="setWeekStart(6)">Sat</div>
+        <div class="chip" data-i="0" onclick="setWeekStart(0)">Mon</div>
+        <div class="chip" data-i="1" onclick="setWeekStart(1)">Tue</div>
+        <div class="chip" data-i="2" onclick="setWeekStart(2)">Wed</div>
+        <div class="chip" data-i="3" onclick="setWeekStart(3)">Thu</div>
+        <div class="chip" data-i="4" onclick="setWeekStart(4)">Fri</div>
+        <div class="chip" data-i="5" onclick="setWeekStart(5)">Sun</div>
+      </div>
+      <div class="section-title"><h2>Unit</h2></div>
+      <div class="segment"><div class="seg active" onclick="setUnit('kg',this)">kg</div><div class="seg" onclick="setUnit('lb',this)">lb</div></div>
+      <div class="section-title"><h2>Data</h2></div>
+      <div class="row" onclick="showToast('Exported — gym-backup.json')"><div class="row-head"><div><div class="row-name" style="font-size:14px;">Export data</div><div class="row-meta">Download all your data as JSON</div></div><div class="chev">›</div></div></div>
+      <div class="row" onclick="showToast('Import ready (demo)')"><div class="row-head"><div><div class="row-name" style="font-size:14px;">Import data</div><div class="row-meta">Restore from a backup file</div></div><div class="chev">›</div></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-name" style="font-size:14px;">About</div><div class="row-meta">Grip v0.1.0</div></div><div class="chev">›</div></div></div>
+      <div class="version">Grip — Get a grip on your training</div>
+    </div>
+  </div>
+
+  <!-- ============ SHEETS ============ -->
+  <div class="sheet" id="sheet-plan">
+    <div class="handle"></div><div class="sheet-head"><h3>New plan</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div class="field"><label>Name</label><input placeholder="e.g. Bro Split"></div>
+    <div class="field"><label>Description (optional)</label><textarea placeholder="6-day hypertrophy split"></textarea></div>
+    <button class="btn primary" onclick="closeSheet();showToast('Plan created (demo)')">Create plan</button>
+  </div>
+
+  <div class="sheet" id="sheet-workout">
+    <div class="handle"></div><div class="sheet-head"><h3>New workout</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div class="field"><label>Workout name</label><input placeholder="e.g. Push"></div>
+    <button class="btn primary" onclick="closeSheet();showToast('Workout added (demo)')">Add workout</button>
+  </div>
+
+  <div class="sheet" id="sheet-add-ex">
+    <div class="handle"></div><div class="sheet-head"><h3>Add exercise</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div class="search" style="margin:0 0 12px;"><span class="ic">⌕</span><input placeholder="Search library..."></div>
+    <div class="list-row"><div class="thumb">🏋</div><div class="info"><div class="t">Barbell Bench Press</div><div class="m">Chest · Barbell</div></div><div style="color:var(--accent);font-size:20px;">＋</div></div>
+    <div class="list-row"><div class="thumb">💪</div><div class="info"><div class="t">Dumbbell Curl</div><div class="m">Biceps · Dumbbell</div></div><div style="color:var(--accent);font-size:20px;">＋</div></div>
+    <div class="list-row"><div class="thumb">🔥</div><div class="info"><div class="t">Overhead Press</div><div class="m">Shoulders · Barbell</div></div><div style="color:var(--accent);font-size:20px;">＋</div></div>
+  </div>
+
+  <div class="sheet" id="sheet-add-adhoc">
+    <div class="handle"></div><div class="sheet-head"><h3>Add exercise <span style="color:var(--text-2);font-size:11px;letter-spacing:0.5px;">SESSION ONLY</span></h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div class="field"><label>Name</label><input placeholder="e.g. Landmine Press"></div>
+    <div class="field"><label>Tool</label>
+      <select><option>Barbell</option><option>Dumbbell</option><option>Cable</option><option>Machine</option><option>Bodyweight</option><option>Other</option></select>
+    </div>
+    <button class="btn primary" onclick="closeSheet();showToast('Added to this workout only')">Add to session</button>
+    <div style="height:8px"></div>
+    <div class="dim" style="font-size:12px;text-align:center;">Won't be added to your exercise library.</div>
+  </div>
+
+  <div class="sheet" id="sheet-set">
+    <div class="handle"></div><div class="sheet-head"><h3>Log set</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div style="display:flex;gap:12px;">
+      <div class="field" style="flex:1;"><label>Reps</label><input type="number" placeholder="12"></div>
+      <div class="field" style="flex:1;"><label>Weight (kg)</label><input type="number" placeholder="60"></div>
+    </div>
+    <button class="btn primary" onclick="closeSheet();showToast('Set saved — rest time!')">Save set</button>
+  </div>
+
+  <div class="sheet" id="sheet-exercise">
+    <div class="handle"></div><div class="sheet-head"><h3>New exercise</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div class="field"><label>Name</label><input placeholder="e.g. Squat"></div>
+    <div class="field"><label>Short description</label><textarea placeholder="Knees track over toes, chest up"></textarea></div>
+    <div class="field"><label>Image URL</label><input placeholder="https://..."></div>
+    <div class="field"><label>Tool</label>
+      <select><option>Barbell</option><option>Dumbbell</option><option>Cable</option><option>Machine</option><option>Bodyweight</option><option>Other</option></select>
+    </div>
+    <div class="field"><label>Primary muscle</label>
+      <div class="chips"><div class="chip">Chest</div><div class="chip active">Back</div><div class="chip">Legs</div><div class="chip">Shoulders</div><div class="chip">Arms</div><div class="chip">Core</div></div>
+    </div>
+    <div class="field"><label>Secondary muscles (optional)</label>
+      <div class="chips"><div class="chip">Triceps</div><div class="chip active">Biceps</div><div class="chip">Forearms</div><div class="chip">Glutes</div><div class="chip">Calves</div></div>
+    </div>
+    <button class="btn primary" onclick="closeSheet();showToast('Exercise added to library')">Save exercise</button>
+  </div>
+
+  <div class="sheet" id="sheet-exercise-edit">
+    <div class="handle"></div><div class="sheet-head"><h3>Edit exercise</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div class="field"><label>Name</label><input value="Barbell Bench Press"></div>
+    <div class="field"><label>Short description</label><textarea>Press bar from chest, keep wrists stacked</textarea></div>
+    <div class="field"><label>Image URL</label><input value="https://example.com/bench.png"></div>
+    <div class="field"><label>Tool</label><select><option selected>Barbell</option><option>Dumbbell</option><option>Cable</option><option>Machine</option><option>Bodyweight</option><option>Other</option></select></div>
+    <div class="field"><label>Primary muscle</label>
+      <div class="chips"><div class="chip active">Chest</div><div class="chip">Back</div><div class="chip">Legs</div><div class="chip">Shoulders</div><div class="chip">Arms</div><div class="chip">Core</div></div>
+    </div>
+    <button class="btn primary" onclick="closeSheet();showToast('Saved')">Save changes</button>
+    <div style="height:8px"></div>
+    <button class="btn danger-ghost" onclick="closeSheet();showToast('Deleted from library')">Delete exercise</button>
+  </div>
+
+  <div class="sheet" id="sheet-end">
+    <div class="handle"></div><div class="sheet-head"><h3>End workout</h3><div class="sheet-cancel" onclick="closeSheet()">✕</div></div>
+    <div style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:var(--sp-4);">Push Day will be saved to your calendar with all details.</div>
+    <div class="row" style="cursor:default;"><div class="row-head"><div><div class="row-name" style="font-size:14px;">Workout</div></div><div class="dim">Push</div></div></div>
+    <div class="row" style="cursor:default;"><div class="row-head"><div><div class="row-name" style="font-size:14px;">Plan</div></div><div class="dim">Bro Split</div></div></div>
+    <div class="row" style="cursor:default;"><div class="row-head"><div><div class="row-name" style="font-size:14px;">Duration</div></div><div class="dim" id="end-duration" style="font-variant-numeric:tabular-nums;">00:24:38</div></div></div>
+    <div class="row" style="cursor:default;"><div class="row-head"><div><div class="row-name" style="font-size:14px;">Volume</div></div><div class="dim" style="font-family:var(--display);font-variant-numeric:tabular-nums;">1,545 kg</div></div></div>
+    <div style="height:4px"></div>
+    <button class="btn primary" onclick="saveWorkout()">Save workout</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost" onclick="closeSheet()">Keep going</button>
+  </div>
+
+  <!-- REST OVERLAY -->
+  <div class="overlay" id="rest-overlay">
+    <div class="rest-label">Rest time</div>
+    <div class="rest-timer" id="rest-timer-val">00:00</div>
+    <div class="rest-next">Next: Set 3 · Barbell Bench Press</div>
+    <button class="btn primary" style="width:230px;" onclick="closeRest()">Ready for next set</button>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="tab" onclick="navTo('s-home')"><span class="ic">▤</span>Home</div>
+    <div class="tab" onclick="navTo('s-calendar')"><span class="ic">◫</span>Calendar</div>
+    <div class="tab start-tab" onclick="startTab()"><div class="fab">▶</div><span id="start-tab-label">Start</span></div>
+    <div class="tab" onclick="navTo('s-plans')"><span class="ic">☰</span>Plans</div>
+    <div class="tab" onclick="navTo('s-exercises')"><span class="ic">⛒</span>Exercises</div>
+  </div>
+
+</div>
+
+<script>
+  const screens = ['s-home','s-plans','s-plan-detail','s-workout-detail','s-start','s-start-workout','s-session','s-calendar','s-cal-day','s-exercises','s-settings'];
+  const mainTabs = { 's-home':0, 's-calendar':1, 's-start':2, 's-plans':3, 's-exercises':4 };
+  const tabNames = ['s-home','s-calendar','s-start','s-plans','s-exercises'];
+
+  function go(id) {
+    screens.forEach(s => document.getElementById(s).classList.toggle('active', s === id));
+    if (id === 's-session') updateReturnButtons();
+  }
+  function navTo(id) { go(id); }
+
+  function setMode(m) {
+    document.getElementById('mode-list').classList.toggle('hidden', m === 'focus');
+    document.getElementById('mode-focus').classList.toggle('hidden', m === 'list');
+    document.getElementById('seg-list').classList.toggle('active', m === 'list');
+    document.getElementById('seg-focus').classList.toggle('active', m === 'focus');
+    if (m === 'focus') showToast('Focus mode');
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function openSheet(id) { document.getElementById(id).classList.add('active'); }
+  function closeSheet() { document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active')); }
+
+  /* ---------- HOME STATS (configurable) ---------- */
+  const optionalStats = {
+    totalWorkouts: { key: 'totalWorkouts', label: 'Total workouts', render: () => '<div class="stat-card"><div class="label">Total workouts</div><div class="value">18</div></div>' },
+    bestWeek:      { key: 'bestWeek', label: 'Best week', render: () => '<div class="stat-card"><div class="label">Best week</div><div class="value">8,900 <small>kg</small></div></div>' },
+    bestDay:       { key: 'bestDay', label: 'Best day', render: () => '<div class="stat-card"><div class="label">Best day</div><div class="value">6,400 <small>kg</small></div></div>' },
+    volumeDay:     { key: 'volumeDay', label: 'Total volume this day', render: () => '<div class="stat-card"><div class="label">Volume today</div><div class="value">6,400 <small>kg</small></div></div>' }
+  };
+  let enabledStats = [];
+
+  function renderHomeStats() {
+    let html =
+      '<div class="stat-card"><div class="label">Trained this week</div><div class="value">3 <small>/ ' + goal + '</small></div></div>' +
+      '<div class="stat-card"><div class="label">Total volume this week</div><div class="value">12,480 <small>kg</small></div></div>';
+    enabledStats.forEach(k => { if (optionalStats[k]) html += optionalStats[k].render(); });
+    document.getElementById('home-stats').innerHTML = html;
+  }
+
+  function toggleStat(key, rowEl) {
+    const chip = rowEl.querySelector('.chip');
+    const i = enabledStats.indexOf(key);
+    if (i >= 0) {
+      enabledStats.splice(i, 1);
+      chip.textContent = 'Off';
+      chip.classList.remove('active');
+    } else {
+      enabledStats.push(key);
+      chip.textContent = 'On';
+      chip.classList.add('active');
+    }
+    renderHomeStats();
+  }
+
+  /* ---------- SETTINGS: goal / week start / unit ---------- */
+  let goal = 4;
+  let weekStart = 6; // 0=Mon ... 6=Sun (Saturday default)
+  let unit = 'kg';
+
+  function changeGoal(d) {
+    goal = Math.min(7, Math.max(1, goal + d));
+    document.getElementById('goal-val').textContent = goal;
+    document.getElementById('cal-week-total').textContent = goal;
+    renderHomeStats();
+  }
+
+  function setWeekStart(i) {
+    weekStart = i;
+    document.querySelectorAll('#weekstart-chips .chip').forEach(c => c.classList.toggle('active', Number(c.getAttribute('data-i')) === i));
+    renderCalendar();
+  }
+
+  function setUnit(u, el) {
+    unit = u;
+    el.parentElement.querySelectorAll('.seg').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    renderHomeStats();
+    showToast('Unit: ' + u);
+  }
+
+  /* ---------- CALENDAR ---------- */
+  const weekdayNames = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  const demoVol = { 5: '4.8k', 11: '3.9k', 17: '6.4k' };
+  let selectedDay = 17;
+
+  function renderCalendar() {
+    const feb1Index = 6; // Feb 1 2026 = Sunday
+    const leading = (feb1Index - weekStart + 7) % 7;
+    let html = '';
+    for (let i = 0; i < 7; i++) html += '<div class="cal-dow">' + weekdayNames[(weekStart + i) % 7] + '</div>';
+    for (let i = 0; i < leading; i++) html += '<div class="cal-day muted">' + (26 + i) + '</div>';
+    for (let d = 1; d <= 28; d++) {
+      let cls = 'cal-day';
+      let inner = '<span class="d">' + d + '</span>';
+      if (demoVol[d]) { cls += ' have'; inner += '<span class="vol">' + demoVol[d] + '</span>'; }
+      if (d === selectedDay) cls += ' selected';
+      html += '<div class="' + cls + '" onclick="selectDay(' + d + ')">' + inner + '</div>';
+    }
+    document.getElementById('cal-grid').innerHTML = html;
+  }
+
+  function selectDay(d) { selectedDay = d; renderCalendar(); }
+
+  /* ---------- LIVE SESSION (persists across navigation) ---------- */
+  let sessionActive = false;
+  let sessionStart = null;
+  let sessionTimerInt = null;
+
+  function fmtElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    return hh + ':' + mm + ':' + ss;
+  }
+
+  function tickSession() {
+    if (!sessionStart) return;
+    const el = document.getElementById('session-timer');
+    if (el) el.textContent = fmtElapsed(Date.now() - sessionStart);
+  }
+
+  function startSession() {
+    if (!sessionStart) sessionStart = Date.now();
+    sessionActive = true;
+    localStorage.setItem('grip_demo_session', String(sessionStart));
+    clearInterval(sessionTimerInt);
+    sessionTimerInt = setInterval(tickSession, 1000);
+    tickSession();
+    updateReturnButtons();
+  }
+
+  function endSession() {
+    sessionActive = false;
+    sessionStart = null;
+    clearInterval(sessionTimerInt);
+    localStorage.removeItem('grip_demo_session');
+    updateReturnButtons();
+  }
+
+  function homeStart() { sessionActive ? go('s-session') : go('s-start'); }
+  function startTab()  { sessionActive ? go('s-session') : go('s-start'); }
+
+  function updateReturnButtons() {
+    const btn = document.getElementById('home-start-btn');
+    const lab = document.getElementById('start-tab-label');
+    if (sessionActive) {
+      if (btn) btn.innerHTML = '<span style="font-size:20px">⏵</span> Return to workout';
+      if (lab) lab.textContent = 'Return';
+    } else {
+      if (btn) btn.innerHTML = '<span style="font-size:20px">▶</span> Start workout';
+      if (lab) lab.textContent = 'Start';
+    }
+  }
+
+  function openEndSheet() {
+    const d = document.getElementById('end-duration');
+    if (d && sessionStart) d.textContent = fmtElapsed(Date.now() - sessionStart);
+    openSheet('sheet-end');
+  }
+
+  function saveWorkout() {
+    closeSheet();
+    endSession();
+    go('s-cal-day');
+    showToast('Workout saved to calendar');
+  }
+
+  /* ---------- REST OVERLAY (free-running) ---------- */
+  let restInt = null;
+  let restStart = 0;
+
+  function openRest() {
+    restStart = Date.now();
+    document.getElementById('rest-timer-val').textContent = '00:00';
+    document.getElementById('rest-overlay').classList.add('active');
+    clearInterval(restInt);
+    restInt = setInterval(() => {
+      const s = Math.floor((Date.now() - restStart) / 1000);
+      const mm = String(Math.floor(s / 60)).padStart(2, '0');
+      const ss = String(s % 60).padStart(2, '0');
+      document.getElementById('rest-timer-val').textContent = mm + ':' + ss;
+    }, 1000);
+  }
+
+  function closeRest() {
+    document.getElementById('rest-overlay').classList.remove('active');
+    clearInterval(restInt);
+  }
+
+  /* ---------- INIT ---------- */
+  go('s-home');
+  renderHomeStats();
+  setWeekStart(6);
+  renderCalendar();
+
+  const saved = localStorage.getItem('grip_demo_session');
+  if (saved) {
+    sessionStart = parseInt(saved, 10);
+    sessionActive = true;
+    tickSession();
+    sessionTimerInt = setInterval(tickSession, 1000);
+    updateReturnButtons();
+  }
+
+  document.querySelector('#sheet-set .btn.primary').addEventListener('click', function() {
+    setTimeout(openRest, 400);
+  });
+</script>
+</body>
+</html>
