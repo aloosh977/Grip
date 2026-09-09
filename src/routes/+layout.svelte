@@ -1,11 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import '../app.css';
-	import '@fontsource/archivo-black';
-	import '@fontsource/inter/400.css';
-	import '@fontsource/inter/500.css';
-	import '@fontsource/inter/600.css';
-	import '@fontsource/inter/700.css';
+	import '@fontsource/archivo-black/latin.css';
+	import '@fontsource/inter/latin-400.css';
+	import '@fontsource/inter/latin-600.css';
+	import '@fontsource/inter/latin-700.css';
 	import Nav from '$lib/components/Nav.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { ensureSeed } from '$lib/seed.js';
