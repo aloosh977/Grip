@@ -1,5 +1,8 @@
-// Storage layer — MVP uses localStorage behind this abstraction.
-// Swap this file's backend for Supabase in Phase 2; nothing else changes.
+// Storage layer — Abstraction supporting localStorage / memory for MVP
+// and structured for @capacitor-community/sqlite in native Android Capacitor builds.
+
+import { Capacitor } from '@capacitor/core';
+import { SQLiteConnection, CapacitorSQLite } from '@capacitor-community/sqlite';
 
 const memory = new Map();
 
@@ -7,7 +10,6 @@ function backend() {
 	if (typeof localStorage !== 'undefined') {
 		return localStorage;
 	}
-	// in-memory fallback (tests, SSR)
 	return {
 		getItem: (k) => (memory.has(k) ? memory.get(k) : null),
 		setItem: (k, v) => memory.set(k, String(v)),
@@ -55,6 +57,76 @@ export const DEFAULT_SETTINGS = {
 	week_start: 6, // getDay(): 0=Sun .. 6=Sat, default Saturday
 	home_stats: [] // optional extras: totalWorkouts | bestWeek | bestDay | volumeDay
 };
+
+// ---- Capacitor SQLite initialization helper ----
+let sqliteConnection = null;
+let dbInstance = null;
+
+export async function initNativeSQLite() {
+	try {
+		if (Capacitor.isNativePlatform()) {
+			sqliteConnection = new SQLiteConnection(CapacitorSQLite);
+			const ret = await sqliteConnection.checkConnectionsConsistency();
+			const isConn = await sqliteConnection.isConnection('grip_db', false);
+			
+			if (ret.result && isConn.result) {
+				dbInstance = await sqliteConnection.retrieveConnection('grip_db', false);
+			} else {
+				dbInstance = await sqliteConnection.createConnection(
+					'grip_db',
+					false,
+					'no-encryption',
+					1,
+					false
+				);
+			}
+			await dbInstance.open();
+			
+			// Create relational tables if not exist
+			await dbInstance.execute(`
+				CREATE TABLE IF NOT EXISTS exercises (
+					id TEXT PRIMARY KEY,
+					name TEXT NOT NULL,
+					description TEXT,
+					image_url TEXT,
+					tool TEXT,
+					muscle_primary TEXT,
+					muscles_secondary TEXT,
+					created_at TEXT,
+					updated_at TEXT
+				);
+				CREATE TABLE IF NOT EXISTS plans (
+					id TEXT PRIMARY KEY,
+					name TEXT NOT NULL,
+					description TEXT,
+					created_at TEXT,
+					updated_at TEXT
+				);
+				CREATE TABLE IF NOT EXISTS sessions (
+					id TEXT PRIMARY KEY,
+					plan_name TEXT,
+					workout_name TEXT,
+					started_at TEXT,
+					ended_at TEXT,
+					total_seconds INTEGER,
+					total_volume REAL,
+					total_sets INTEGER,
+					notes TEXT
+				);
+				CREATE TABLE IF NOT EXISTS settings (
+					key TEXT PRIMARY KEY,
+					value TEXT
+				);
+				CREATE TABLE IF NOT EXISTS active_session (
+					id TEXT PRIMARY KEY,
+					data TEXT
+				);
+			`);
+		}
+	} catch (err) {
+		console.warn('Native SQLite init error (falling back to storage abstraction):', err);
+	}
+}
 
 // ---- exercises ----
 export function getExercises() {
@@ -129,7 +201,6 @@ export function importAll(json) {
 }
 
 // ---- reset ----
-// Wipes all data and resets settings to defaults.
 export function resetAll() {
 	for (const key of Object.values(KEYS)) {
 		removeKey(key);
