@@ -8,14 +8,18 @@
 	import Nav from '$lib/components/Nav.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { ensureSeed } from '$lib/seed.js';
+	import { initNativeSQLite } from '$lib/db.js';
 	import { StatusBar, Style } from '@capacitor/status-bar';
 	import { App } from '@capacitor/app';
 
-	ensureSeed();
-
+	let initialized = $state(false);
 	let { children } = $props();
 
 	onMount(async () => {
+		await initNativeSQLite();
+		ensureSeed();
+		initialized = true;
+
 		const splash = document.getElementById('boot-splash');
 		if (splash) {
 			splash.classList.add('hide');
@@ -23,22 +27,28 @@
 		}
 
 		// Status Bar setup
-		await StatusBar.setBackgroundColor({ color: '#0f0f10' });
-		await StatusBar.setStyle({ style: Style.Dark });
+		try {
+			await StatusBar.setBackgroundColor({ color: '#0f0f10' });
+			await StatusBar.setStyle({ style: Style.Dark });
+		} catch {}
 
 		// Back Button listener
-		App.addListener('backButton', () => {
-			if (window.history.length > 1) {
-				window.history.back();
-			} else {
-				App.exitApp();
-			}
-		});
+		try {
+			App.addListener('backButton', () => {
+				if (window.history.length > 1) {
+					window.history.back();
+				} else {
+					App.exitApp();
+				}
+			});
+		} catch {}
 	});
 </script>
 
-<div class="app">
-	{@render children()}
-	<Nav />
-</div>
+{#if initialized}
+	<div class="app">
+		{@render children()}
+		<Nav />
+	</div>
+{/if}
 <Toast />

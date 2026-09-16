@@ -29,11 +29,20 @@ export function readJson(key, fallback) {
 }
 
 export function writeJson(key, value) {
-	store.setItem(key, JSON.stringify(value));
+	const str = JSON.stringify(value);
+	store.setItem(key, str);
+	if (Capacitor.isNativePlatform() && dbInstance) {
+		dbInstance.run('INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?);', [key, str])
+			.catch((err) => console.error('SQLite write error:', err));
+	}
 }
 
 export function removeKey(key) {
 	store.removeItem(key);
+	if (Capacitor.isNativePlatform() && dbInstance) {
+		dbInstance.run('DELETE FROM kv_store WHERE key = ?;', [key])
+			.catch((err) => console.error('SQLite delete error:', err));
+	}
 }
 
 export function uid() {
@@ -82,46 +91,21 @@ export async function initNativeSQLite() {
 			}
 			await dbInstance.open();
 			
-			// Create relational tables if not exist
+			// Create key-value table
 			await dbInstance.execute(`
-				CREATE TABLE IF NOT EXISTS exercises (
-					id TEXT PRIMARY KEY,
-					name TEXT NOT NULL,
-					description TEXT,
-					image_url TEXT,
-					tool TEXT,
-					muscle_primary TEXT,
-					muscles_secondary TEXT,
-					created_at TEXT,
-					updated_at TEXT
-				);
-				CREATE TABLE IF NOT EXISTS plans (
-					id TEXT PRIMARY KEY,
-					name TEXT NOT NULL,
-					description TEXT,
-					created_at TEXT,
-					updated_at TEXT
-				);
-				CREATE TABLE IF NOT EXISTS sessions (
-					id TEXT PRIMARY KEY,
-					plan_name TEXT,
-					workout_name TEXT,
-					started_at TEXT,
-					ended_at TEXT,
-					total_seconds INTEGER,
-					total_volume REAL,
-					total_sets INTEGER,
-					notes TEXT
-				);
-				CREATE TABLE IF NOT EXISTS settings (
+				CREATE TABLE IF NOT EXISTS kv_store (
 					key TEXT PRIMARY KEY,
 					value TEXT
 				);
-				CREATE TABLE IF NOT EXISTS active_session (
-					id TEXT PRIMARY KEY,
-					data TEXT
-				);
 			`);
+
+			// Hydrate the synchronous cache from SQLite
+			const res = await dbInstance.query('SELECT * FROM kv_store;');
+			if (res && res.values) {
+				for (const row of res.values) {
+					store.setItem(row.key, row.value);
+				}
+			}
 		}
 	} catch (err) {
 		console.warn('Native SQLite init error (falling back to storage abstraction):', err);
